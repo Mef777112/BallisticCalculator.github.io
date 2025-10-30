@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Баллистический калькулятор</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Courier New', monospace;
+            background: #f5f5f5;
+            color: #333;
+            padding: 10px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-size: 13px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            color: #666;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+        
+        input, select {
+            padding: 14px 12px;
+            border: 1px solid #ccc;
+            background: #fafafa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Courier New', monospace;
+            font-size: 16px;
+            border-radius: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        select {
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 20px;
+            padding-right: 35px;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #333;
+            background: white;
+        }
+        
+        button {
+            padding: 16px 30px;
+            background: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-family: -apple-system, BlinkMacSystemFont, 'Courier New', monospace;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            touch-action: manipulation;
+        }
+        
+        button:active {
+            background: #000;
+            transform: scale(0.98);
+        }
+        
+        .results {
+            margin-top: 20px;
+        }
+        
+        .results h2 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -15px;
+            padding: 0 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 600px;
+        }
+        
+        th, td {
+            padding: 12px 8px;
+            text-align: right;
+            border: 1px solid #ddd;
+        }
+        
+        th {
+            background: #333;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-size: 11px;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .info-panel {
+            background: #f0f0f0;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-left: 3px solid #333;
+            border-radius: 4px;
+        }
+        
+        .info-panel h3 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .info-panel p {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                padding: 30px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .input-section {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th {
+                font-size: 12px;
+            }
+        }
+        
+        /* Оптимизация для очень маленьких экранов */
+        @media (max-width: 375px) {
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 18px;
+            }
+            
+            input, select, button {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Баллистический калькулятор</h1>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label for="cartridge">Патрон</label>
+                <select id="cartridge">
+                    <option value="556">5.56×45 NATO (M855)</option>
+                    <option value="762x39">7.62×39 (M43)</option>
+                    <option value="308">7.62×51 / .308 Win (M80)</option>
+                    <option value="338">0.338 Lapua Magnum</option>
+                    <option value="50">0.50 BMG (M33)</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="zeroRange">Дистанция пристрелки (м)</label>
+                <input type="number" id="zeroRange" value="200" min="50" max="1000" inputmode="numeric">
+            </div>
+            
+            <div class="input-group">
+                <label for="targetDistance">Дистанция цели (м)</label>
+                <input type="number" id="targetDistance" value="800" min="50" max="2000" inputmode="numeric">
+            </div>
+            
+            <div class="input-group">
+                <label for="windSpeed">Скорость ветра (м/с)</label>
+                <input type="number" id="windSpeed" value="5" min="0" max="30" step="0.1" inputmode="decimal">
+            </div>
+            
+            <div class="input-group">
+                <label for="windAngle">Угол ветра (градусы)</label>
+                <input type="number" id="windAngle" value="90" min="0" max="360" inputmode="numeric">
+            </div>
+            
+            <div class="input-group">
+                <label for="temperature">Температура (°C)</label>
+                <input type="number" id="temperature" value="15" min="-40" max="50" inputmode="numeric">
+            </div>
+            
+            <div class="input-group">
+                <label for="altitude">Высота над уровнем моря (м)</label>
+                <input type="number" id="altitude" value="0" min="0" max="4000" inputmode="numeric">
+            </div>
+            
+            <div class="input-group">
+                <label for="shootingAngle">Угол стрельбы (градусы)</label>
+                <input type="number" id="shootingAngle" value="0" min="-45" max="45" inputmode="numeric">
+            </div>
+        </div>
+        
+        <button onclick="calculate()">Рассчитать траекторию</button>
+        
+        <div id="infoPanel" class="info-panel" style="display: none;">
+            <h3>Параметры патрона</h3>
+            <p id="cartridgeInfo"></p>
+        </div>
+        
+        <div class="results" id="results" style="display: none;">
+            <h2>Баллистическая таблица</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дист.<br>(м)</th>
+                            <th>Падение<br>(см)</th>
+                            <th>Ветер<br>(см)</th>
+                            <th>Скор.<br>(м/с)</th>
+                            <th>Энергия<br>(Дж)</th>
+                            <th>Время<br>(с)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cartridges = {
+            '556': {
+                name: '5.56×45 NATO M855',
+                bulletWeight: 0.00402,
+                muzzleVelocity: 940,
+                bc: 0.304,
+                sightHeight: 0.038
+            },
+            '762x39': {
+                name: '7.62×39 M43',
+                bulletWeight: 0.00797,
+                muzzleVelocity: 715,
+                bc: 0.295,
+                sightHeight: 0.045
+            },
+            '308': {
+                name: '7.62×51 / .308 Win M80',
+                bulletWeight: 0.00955,
+                muzzleVelocity: 833,
+                bc: 0.398,
+                sightHeight: 0.055
+            },
+            '338': {
+                name: '0.338 Lapua Magnum',
+                bulletWeight: 0.01620,
+                muzzleVelocity: 906,
+                bc: 0.670,
+                sightHeight: 0.060
+            },
+            '50': {
+                name: '0.50 BMG M33',
+                bulletWeight: 0.04309,
+                muzzleVelocity: 853,
+                bc: 0.670,
+                sightHeight: 0.070
+            }
+        };
+
+        function calculate() {
+            const cartridgeId = document.getElementById('cartridge').value;
+            const cartridge = cartridges[cartridgeId];
+            const zeroRange = parseFloat(document.getElementById('zeroRange').value);
+            const maxDistance = parseFloat(document.getElementById('targetDistance').value);
+            const windSpeed = parseFloat(document.getElementById('windSpeed').value);
+            const windAngle = parseFloat(document.getElementById('windAngle').value);
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const altitude = parseFloat(document.getElementById('altitude').value);
+            const shootingAngle = parseFloat(document.getElementById('shootingAngle').value);
+
+            document.getElementById('cartridgeInfo').innerHTML = `
+                <strong>${cartridge.name}</strong><br>
+                Масса: ${(cartridge.bulletWeight * 1000).toFixed(2)} г | 
+                V₀: ${cartridge.muzzleVelocity} м/с | 
+                BC: ${cartridge.bc} | 
+                Прицел: ${(cartridge.sightHeight * 100).toFixed(1)} см
+            `;
+            document.getElementById('infoPanel').style.display = 'block';
+
+            const stdPressure = 101325;
+            const pressure = stdPressure * Math.pow(1 - 0.0065 * altitude / 288.15, 5.255);
+            const tempK = temperature + 273.15;
+            const airDensity = pressure / (287.05 * tempK);
+            const stdDensity = 1.225;
+            const densityRatio = airDensity / stdDensity;
+
+            const g = 9.81;
+            const angleRad = shootingAngle * Math.PI / 180;
+            const effectiveG = g * Math.cos(angleRad);
+
+            const zeroAngle = calculateZeroAngle(cartridge, zeroRange, densityRatio, effectiveG);
+
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = '';
+
+            for (let distance = 0; distance <= maxDistance; distance += 50) {
+                const result = calculateTrajectory(
+                    cartridge, 
+                    distance, 
+                    zeroAngle, 
+                    densityRatio, 
+                    effectiveG,
+                    windSpeed,
+                    windAngle
+                );
+
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = distance;
+                row.insertCell(1).textContent = (result.drop * 100).toFixed(1);
+                row.insertCell(2).textContent = (result.windage * 100).toFixed(1);
+                row.insertCell(3).textContent = result.velocity.toFixed(1);
+                row.insertCell(4).textContent = result.energy.toFixed(0);
+                row.insertCell(5).textContent = result.time.toFixed(3);
+            }
+
+            document.getElementById('results').style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+
+        function calculateZeroAngle(cartridge, zeroRange, densityRatio, g) {
+            let angle = 0;
+            let step = 0.001;
+            
+            for (let i = 0; i < 100; i++) {
+                const result = calculateTrajectory(cartridge, zeroRange, angle, densityRatio, g, 0, 0);
+                const error = result.drop - cartridge.sightHeight;
+                
+                if (Math.abs(error) < 0.001) break;
+                
+                if (error > 0) {
+                    angle += step;
+                } else {
+                    angle -= step;
+                    step *= 0.5;
+                }
+            }
+            
+            return angle;
+        }
+
+        function calculateTrajectory(cartridge, distance, angle, densityRatio, g, windSpeed, windAngle) {
+            const dt = 0.01;
+            let x = 0, y = -cartridge.sightHeight, z = 0;
+            let vx = cartridge.muzzleVelocity * Math.cos(angle);
+            let vy = cartridge.muzzleVelocity * Math.sin(angle);
+            let vz = 0;
+            let time = 0;
+
+            const windAngleRad = windAngle * Math.PI / 180;
+            const windX = windSpeed * Math.cos(windAngleRad);
+            const windZ = windSpeed * Math.sin(windAngleRad);
+
+            const dragCoef = 0.5191;
+            const area = Math.pow(cartridge.bulletWeight / 0.01, 0.333) * 0.0001;
+
+            while (x < distance && y > -50) {
+                const v = Math.sqrt(vx * vx + vy * vy + vz * vz);
+                const mach = v / 340;
+                
+                let cd;
+                if (mach < 0.8) cd = 0.2629;
+                else if (mach < 1.2) cd = 0.3742 + 0.2808 * (mach - 0.8);
+                else if (mach < 2.0) cd = 0.4865 + 0.0935 * (mach - 1.2);
+                else cd = 0.5613;
+
+                const dragForce = 0.5 * densityRatio * cd * area * v * v / cartridge.bc;
+
+                const relVx = vx - windX;
+                const relVz = vz - windZ;
+                const relV = Math.sqrt(relVx * relVx + vy * vy + relVz * relVz);
+
+                const ax = -(dragForce * relVx / relV) / cartridge.bulletWeight;
+                const ay = -g - (dragForce * vy / relV) / cartridge.bulletWeight;
+                const az = -(dragForce * relVz / relV) / cartridge.bulletWeight;
+
+                vx += ax * dt;
+                vy += ay * dt;
+                vz += az * dt;
+
+                x += vx * dt;
+                y += vy * dt;
+                z += vz * dt;
+
+                time += dt;
+
+                if (x >= distance) {
+                    const velocity = Math.sqrt(vx * vx + vy * vy + vz * vz);
+                    const energy = 0.5 * cartridge.bulletWeight * velocity * velocity;
+                    
+                    return {
+                        drop: y,
+                        windage: z,
+                        velocity: velocity,
+                        energy: energy,
+                        time: time
+                    };
+                }
+            }
+
+            return { drop: 0, windage: 0, velocity: 0, energy: 0, time: 0 };
+        }
+
+        window.onload = () => {
+            calculate();
+        };
+    </script>
+</body>
+</html>
